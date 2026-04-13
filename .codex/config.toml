@@ -1,0 +1,39 @@
+project_name = "codex-coding-workflow"
+default_workflow = "coding"
+reports_dir = "reports"
+logs_dir = "logs"
+
+[workflow]
+source_of_truth = "tasks.json"
+prompt_dir = "prompts"
+agent_dir = ".codex/agents"
+
+[profiles.worker]
+prompt = "prompts/worker-handoff.md"
+strict_scope = true
+
+[profiles.frontend_child]
+prompt = "prompts/frontend-child.md"
+strict_scope = true
+
+[profiles.backend_child]
+prompt = "prompts/backend-child.md"
+strict_scope = true
+
+[profiles.test_child]
+prompt = "prompts/test-child.md"
+strict_scope = true
+
+[profiles.tester_agent]
+prompt = "prompts/tester-handoff.md"
+quality_gate = true
+
+[profiles.main_agent]
+prompt = "prompts/planner.md"
+
+[profiles.reviewer]
+prompt = "prompts/reviewer-gate.md"
+quality_gate = true
+
+[profiles.planner]
+prompt = "prompts/planner.md"

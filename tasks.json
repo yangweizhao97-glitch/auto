@@ -1,0 +1,106 @@
+{
+  "version": "5.0",
+  "project": {
+    "name": "codex-main-agent-workflow",
+    "goal": "",
+    "owner": "admin",
+    "updated_at": "2026-04-13T16:30:00+08:00"
+  },
+  "workflow": {
+    "mode": "main-agent-dispatch",
+    "source_of_truth": "tasks.json",
+    "reports_dir": "reports",
+    "logs_dir": "logs",
+    "default_max_retries": 3,
+    "dispatch_policy": {
+      "priority_order": [
+        "P0",
+        "P1",
+        "P2",
+        "P3"
+      ],
+      "default_priority": "P2",
+      "allow_preemption": true,
+      "default_preempt_lower_priority": false,
+      "allow_scope_overlap_default": false
+    },
+    "evidence_schema": "cmd=<command>|result=<pass|fail|skipped>|log=<path>|artifact=<path-or-url>"
+  },
+  "requests": [],
+  "quality_gate": {
+    "commands": [
+      {
+        "id": "build",
+        "command": "",
+        "optional": true,
+        "auto_detect": true
+      },
+      {
+        "id": "typecheck",
+        "command": "",
+        "optional": true,
+        "auto_detect": true
+      },
+      {
+        "id": "lint",
+        "command": "",
+        "optional": true,
+        "auto_detect": true
+      },
+      {
+        "id": "test",
+        "command": "",
+        "optional": true,
+        "auto_detect": true
+      }
+    ]
+  },
+  "roles": {
+    "main_agent": {
+      "prompt": "prompts/planner.md"
+    },
+    "child_agent": {
+      "prompt": "prompts/worker-handoff.md"
+    },
+    "tester_agent": {
+      "prompt": "prompts/tester-handoff.md"
+    }
+  },
+  "tasks": [
+    {
+      "id": "task_001",
+      "request_id": "",
+      "priority": "P1",
+      "title": "Intake And Baseline",
+      "description": "Main AGENT reads incoming requests and discovers available project checks.",
+      "phase": "baseline",
+      "owner_role": "main_agent",
+      "parent_task_id": "",
+      "preemptible": false,
+      "allow_scope_overlap": false,
+      "status": "todo",
+      "dependencies": [],
+      "scope": [
+        "tasks.json",
+        "logs/",
+        "reports/"
+      ],
+      "context_files": [
+        "AGENTS.md",
+        "tasks.json"
+      ],
+      "skills": [
+        "verification"
+      ],
+      "acceptance_criteria": [
+        "ac.check_discovery: project checks are discovered or marked skipped",
+        "ac.intake_ready: workflow is ready to accept one or more user requests"
+      ],
+      "retries": 0,
+      "max_retries": 3,
+      "failure_reason": "",
+      "evidence": [],
+      "updated_at": ""
+    }
+  ]
+}
