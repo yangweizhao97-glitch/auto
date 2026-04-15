@@ -45,6 +45,32 @@ function Test-EvidenceFormat {
     return ($Line -match "^cmd=.+\|result=(pass|fail|skipped)\|log=.+(\|artifact=.+)?$")
 }
 
+function Test-HasMarkdownArtifactEvidence {
+    param(
+        [string[]]$Lines
+    )
+
+    foreach ($line in $Lines) {
+        if ([string]::IsNullOrWhiteSpace($line)) {
+            continue
+        }
+
+        if ($line -match "\|artifact=([^|]+)$") {
+            $artifact = $Matches[1].Trim()
+            if ($artifact.ToLowerInvariant().EndsWith(".md")) {
+                return $true
+            }
+            continue
+        }
+
+        if ($line -notmatch "\|" -and $line.Trim().ToLowerInvariant().EndsWith(".md")) {
+            return $true
+        }
+    }
+
+    return $false
+}
+
 $workflow = Read-Workflow
 $task = Get-Task -Workflow $workflow -TaskId $TaskId
 
@@ -88,6 +114,22 @@ if ($Status -eq "blocked" -and [string]::IsNullOrWhiteSpace($FailureReason)) {
 foreach ($entry in $Evidence) {
     if (-not (Test-EvidenceFormat -Line $entry)) {
         throw ("Invalid evidence format: {0}" -f $entry)
+    }
+}
+
+if ($Status -eq "done") {
+    $requiresMarkdownEvidence = $false
+    if ($task.owner_role -eq "child_agent" -or $task.owner_role -eq "tester_agent") {
+        $requiresMarkdownEvidence = $true
+    } elseif ($task.phase -eq "implementation" -or $task.phase -eq "testing") {
+        $requiresMarkdownEvidence = $true
+    }
+
+    if ($requiresMarkdownEvidence) {
+        $combinedEvidence = @($task.evidence) + @($Evidence)
+        if (-not (Test-HasMarkdownArtifactEvidence -Lines $combinedEvidence)) {
+            throw ("Completing {0} requires markdown artifact evidence (reports/results/*.md)." -f $task.id)
+        }
     }
 }
 

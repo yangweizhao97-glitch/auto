@@ -11,25 +11,34 @@ Implement a single frontend task.
 - `scope`: {{scope}}
 - `context_files`: {{context_files}}
 - `acceptance_criteria`: {{acceptance_criteria}}
+- `handoff_packet`: {{handoff_packet}}
+- `writeback_report`: {{writeback_report}}
 
 ## Frontend Rules
 
-1. change only UI-facing files in `scope`
-2. keep behavior intentional and easy to verify
-3. call out edge cases that still need QA
+1. read `handoff_packet` first and treat it as the execution source
+2. do not rely on prior conversation context for task details
+3. change only UI-facing files in `scope`
+4. keep behavior intentional and easy to verify
+5. call out edge cases that still need QA
+6. write final markdown report to `writeback_report`, then return that file path
 
 ## Output Format
 
-```text
-[FRONTEND_RESULT]
+```markdown
+# Frontend Result
+
 task_id: {{task_id}}
-changed_files:
+
+## Changed Files
 - ...
-summary:
+
+## Summary
 - ...
-validation:
-- ...
-risks:
+
+## Validation
+- cmd=<command>|result=<pass|fail|skipped>|log=<path>|artifact=<path-or-url>
+
+## Risks
 - ...
 ```
-

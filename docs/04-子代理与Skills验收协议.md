@@ -9,9 +9,11 @@
 1. `task_id`：当前任务 ID。
 2. `goal`：本次明确目标（一句话）。
 3. `scope`：允许修改的文件范围。
-4. `input_context`：相关代码片段或文件路径。
-5. `acceptance_criteria`：验收标准（可测、可判断）。
-6. `output_format`：要求子代理返回的结构。
+4. `handoff_packet`：任务交接 markdown 文件路径（主输入源）。
+5. `input_context`：相关代码片段或文件路径（可选补充，不是主输入源）。
+6. `acceptance_criteria`：验收标准（可测、可判断）。
+7. `writeback_report`：子代理完成后要写入的 markdown 报告路径。
+8. `output_format`：要求子代理返回的结构。
 
 推荐消息模板：
 
@@ -19,8 +21,11 @@
 你负责执行任务 {task_id}。
 目标：{goal}
 可修改范围：{scope}
-上下文文件：{input_context}
+交接文档：{handoff_packet}
+补充上下文文件：{input_context}
 验收标准：{acceptance_criteria}
+结果回写路径：{writeback_report}
+请先读取交接文档执行，不要依赖历史对话上下文。
 请输出：
 1) 修改文件列表
 2) 关键变更说明
@@ -53,6 +58,11 @@ evidence:
 reason: ...
 suggested_fix: ...
 ```
+
+补充要求：
+
+1. 验收结果应优先写入 markdown 报告文件并返回路径。
+2. evidence 中建议附加 `artifact=<markdown-report-path>`。
 
 ## 3. 回写规则（tasks.json）
 
@@ -97,9 +107,8 @@ while exists(task.status in [todo, in_progress]):
 ## 6. 常见失败与处理
 
 1. 子代理没有拿到上下文：
-   - 补充 `context_files` 与关键代码片段后重试。
+   - 优先检查 `handoff_packet` 是否存在并可读，再补充 `context_files`。
 2. 验收标准不清晰导致反复失败：
    - 将标准改成可量化检查项（如“测试通过 3 项”）。
 3. 依赖链卡死：
    - 检查前置任务是否误标为 `done` 或长期 `blocked`。
-

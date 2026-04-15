@@ -109,8 +109,18 @@ This means:
    - `scope`
    - `context_files`
    - `acceptance_criteria`
+   - `handoff_packet` (markdown file path)
+   - `writeback_report` (markdown file path)
 4. the main AGENT owns all final task state changes
 5. writes to `tasks.json` should be serialized by the main AGENT; do not run multiple status-write scripts in parallel
+
+## Markdown Handoff Mode
+
+1. main AGENT must generate a markdown handoff packet for each dispatched task.
+2. child and tester AGENTs must read the handoff packet as primary input.
+3. child and tester AGENTs must not rely on prior chat context as task source.
+4. each completed task must write a markdown result report and return its file path to main AGENT.
+5. main AGENT should process downstream decisions based on markdown report artifacts.
 
 ## Conflict Resolution
 
@@ -185,18 +195,20 @@ Evidence should use one line per check:
 
 ### Child AGENT Output
 
-1. changed files
-2. implementation summary
-3. validation notes
-4. remaining risks
+1. markdown report file path under `reports/results/`
+2. changed files
+3. implementation summary
+4. validation notes
+5. remaining risks
 
 ### Tester AGENT Output
 
-1. overall pass or fail
-2. checks performed
-3. behavior findings
-4. evidence
-5. suggested optimization if failed
+1. markdown report file path under `reports/results/`
+2. overall pass or fail
+3. checks performed
+4. behavior findings
+5. evidence
+6. suggested optimization if failed
 
 ## Completion Condition
 

@@ -1,106 +1,558 @@
-{
-  "version": "5.0",
-  "project": {
-    "name": "codex-main-agent-workflow",
-    "goal": "",
-    "owner": "admin",
-    "updated_at": "2026-04-13T16:30:00+08:00"
-  },
-  "workflow": {
-    "mode": "main-agent-dispatch",
-    "source_of_truth": "tasks.json",
-    "reports_dir": "reports",
-    "logs_dir": "logs",
-    "default_max_retries": 3,
-    "dispatch_policy": {
-      "priority_order": [
-        "P0",
-        "P1",
-        "P2",
-        "P3"
-      ],
-      "default_priority": "P2",
-      "allow_preemption": true,
-      "default_preempt_lower_priority": false,
-      "allow_scope_overlap_default": false
-    },
-    "evidence_schema": "cmd=<command>|result=<pass|fail|skipped>|log=<path>|artifact=<path-or-url>"
-  },
-  "requests": [],
-  "quality_gate": {
-    "commands": [
-      {
-        "id": "build",
-        "command": "",
-        "optional": true,
-        "auto_detect": true
-      },
-      {
-        "id": "typecheck",
-        "command": "",
-        "optional": true,
-        "auto_detect": true
-      },
-      {
-        "id": "lint",
-        "command": "",
-        "optional": true,
-        "auto_detect": true
-      },
-      {
-        "id": "test",
-        "command": "",
-        "optional": true,
-        "auto_detect": true
-      }
-    ]
-  },
-  "roles": {
-    "main_agent": {
-      "prompt": "prompts/planner.md"
-    },
-    "child_agent": {
-      "prompt": "prompts/worker-handoff.md"
-    },
-    "tester_agent": {
-      "prompt": "prompts/tester-handoff.md"
-    }
-  },
-  "tasks": [
-    {
-      "id": "task_001",
-      "request_id": "",
-      "priority": "P1",
-      "title": "Intake And Baseline",
-      "description": "Main AGENT reads incoming requests and discovers available project checks.",
-      "phase": "baseline",
-      "owner_role": "main_agent",
-      "parent_task_id": "",
-      "preemptible": false,
-      "allow_scope_overlap": false,
-      "status": "todo",
-      "dependencies": [],
-      "scope": [
-        "tasks.json",
-        "logs/",
-        "reports/"
-      ],
-      "context_files": [
-        "AGENTS.md",
-        "tasks.json"
-      ],
-      "skills": [
-        "verification"
-      ],
-      "acceptance_criteria": [
-        "ac.check_discovery: project checks are discovered or marked skipped",
-        "ac.intake_ready: workflow is ready to accept one or more user requests"
-      ],
-      "retries": 0,
-      "max_retries": 3,
-      "failure_reason": "",
-      "evidence": [],
-      "updated_at": ""
-    }
-  ]
+﻿{
+    "version":  "5.0",
+    "project":  {
+                    "name":  "codex-main-agent-workflow",
+                    "goal":  "把这个工作流部署到桌面的移动端文件夹中",
+                    "owner":  "admin",
+                    "updated_at":  "2026-04-14T14:17:48.1329750+08:00"
+                },
+    "workflow":  {
+                     "mode":  "main-agent-dispatch",
+                     "source_of_truth":  "tasks.json",
+                     "reports_dir":  "reports",
+                     "logs_dir":  "logs",
+                     "default_max_retries":  3,
+                     "dispatch_policy":  {
+                                             "priority_order":  [
+                                                                    "P0",
+                                                                    "P1",
+                                                                    "P2",
+                                                                    "P3"
+                                                                ],
+                                             "default_priority":  "P2",
+                                             "allow_preemption":  true,
+                                             "default_preempt_lower_priority":  false,
+                                             "allow_scope_overlap_default":  false
+                                         },
+                     "evidence_schema":  "cmd=\u003ccommand\u003e|result=\u003cpass|fail|skipped\u003e|log=\u003cpath\u003e|artifact=\u003cpath-or-url\u003e"
+                 },
+    "requests":  [
+                     {
+                         "id":  "req_001",
+                         "goal":  "目前工作流的agents后续，每次完成任务都要写成md文档后，发给主AGENT让他来处理。让子agent通过读取md文档来获取信息 而不是上下文",
+                         "priority":  "P2",
+                         "status":  "queued",
+                         "preempt_lower_priority":  false,
+                         "preemption_applied":  false,
+                         "preempted_tasks":  [
+
+                                             ],
+                         "created_at":  "2026-04-14T14:04:54.9323680+08:00"
+                     },
+                     {
+                         "id":  "req_002",
+                         "goal":  "把这个工作流部署到桌面的移动端文件夹中",
+                         "priority":  "P2",
+                         "status":  "queued",
+                         "preempt_lower_priority":  false,
+                         "preemption_applied":  false,
+                         "preempted_tasks":  [
+
+                                             ],
+                         "created_at":  "2026-04-14T14:17:48.0077378+08:00"
+                     }
+                 ],
+    "quality_gate":  {
+                         "commands":  [
+                                          {
+                                              "id":  "build",
+                                              "command":  "",
+                                              "optional":  true,
+                                              "auto_detect":  true
+                                          },
+                                          {
+                                              "id":  "typecheck",
+                                              "command":  "",
+                                              "optional":  true,
+                                              "auto_detect":  true
+                                          },
+                                          {
+                                              "id":  "lint",
+                                              "command":  "",
+                                              "optional":  true,
+                                              "auto_detect":  true
+                                          },
+                                          {
+                                              "id":  "test",
+                                              "command":  "",
+                                              "optional":  true,
+                                              "auto_detect":  true
+                                          }
+                                      ]
+                     },
+    "roles":  {
+                  "main_agent":  {
+                                     "prompt":  "prompts/planner.md"
+                                 },
+                  "child_agent":  {
+                                      "prompt":  "prompts/worker-handoff.md"
+                                  },
+                  "tester_agent":  {
+                                       "prompt":  "prompts/tester-handoff.md"
+                                   }
+              },
+    "tasks":  [
+                  {
+                      "id":  "task_001",
+                      "request_id":  "",
+                      "priority":  "P1",
+                      "title":  "Intake And Baseline",
+                      "description":  "Main AGENT reads incoming requests and discovers available project checks.",
+                      "phase":  "baseline",
+                      "owner_role":  "main_agent",
+                      "parent_task_id":  "",
+                      "preemptible":  false,
+                      "allow_scope_overlap":  false,
+                      "status":  "done",
+                      "dependencies":  [
+
+                                       ],
+                      "scope":  [
+                                    "tasks.json",
+                                    "logs/",
+                                    "reports/"
+                                ],
+                      "context_files":  [
+                                            "AGENTS.md",
+                                            "tasks.json"
+                                        ],
+                      "skills":  [
+                                     "verification"
+                                 ],
+                      "acceptance_criteria":  [
+                                                  "ac.check_discovery: project checks are discovered or marked skipped",
+                                                  "ac.intake_ready: workflow is ready to accept one or more user requests"
+                                              ],
+                      "retries":  0,
+                      "max_retries":  3,
+                      "failure_reason":  "",
+                      "evidence":  [
+                                       "cmd=workflow_baseline|result=pass|log=logs/workflow-20260414.log|artifact=C:\\Users\\admin\\Desktop\\自动化工作流\\reports\\quality-gate-baseline.json"
+                                   ],
+                      "updated_at":  "2026-04-14T14:04:49.0100000+08:00"
+                  },
+                  {
+                      "id":  "task_002",
+                      "request_id":  "req_001",
+                      "priority":  "P2",
+                      "title":  "Plan Request req_001",
+                      "description":  "Main AGENT plans and dispatches request req_001: 目前工作流的agents后续，每次完成任务都要写成md文档后，发给主AGENT让他来处理。让子agent通过读取md文档来获取信息 而不是上下文",
+                      "phase":  "planning",
+                      "owner_role":  "main_agent",
+                      "agent_profile":  "main_agent",
+                      "parent_task_id":  "",
+                      "preemptible":  false,
+                      "allow_scope_overlap":  false,
+                      "status":  "in_progress",
+                      "dependencies":  [
+                                           "task_001"
+                                       ],
+                      "scope":  [
+                                    "tasks.json",
+                                    "docs/",
+                                    "reports/"
+                                ],
+                      "context_files":  [
+                                            "AGENTS.md",
+                                            "tasks.json",
+                                            "docs/09-缁熶竴浠诲姟鎷嗚В鏂规.md"
+                                        ],
+                      "skills":  [
+                                     "planning"
+                                 ],
+                      "acceptance_criteria":  [
+                                                  "ac.split_order: tasks are split by deliverable then code boundary then acceptance method",
+                                                  "ac.parallel_safety: parallel tasks do not overlap in unsafe scope",
+                                                  "ac.dispatch_ready: each child task has scope, context_files, and acceptance_criteria"
+                                              ],
+                      "retries":  0,
+                      "max_retries":  3,
+                      "failure_reason":  "",
+                      "evidence":  [
+                                       "cmd=auto_plan|result=pass|log=logs/workflow-20260414.log|artifact=C:\\Users\\admin\\Desktop\\自动化工作流\\reports\\plan-req_001-20260414-140455.md"
+                                   ],
+                      "updated_at":  "2026-04-14T14:05:03.6409984+08:00"
+                  },
+                  {
+                      "id":  "task_003",
+                      "request_id":  "req_001",
+                      "priority":  "P2",
+                      "title":  "Update Developer Docs",
+                      "description":  "Implement request req_001 for area \u0027docs\u0027: 目前工作流的agents后续，每次完成任务都要写成md文档后，发给主AGENT让他来处理。让子agent通过读取md文档来获取信息 而不是上下文",
+                      "phase":  "implementation",
+                      "owner_role":  "child_agent",
+                      "agent_profile":  "child_agent",
+                      "parent_task_id":  "task_002",
+                      "preemptible":  true,
+                      "allow_scope_overlap":  false,
+                      "status":  "todo",
+                      "dependencies":  [
+                                           "task_002"
+                                       ],
+                      "scope":  [
+                                    "docs/",
+                                    "README.md"
+                                ],
+                      "context_files":  [
+                                            "AGENTS.md",
+                                            "tasks.json",
+                                            "prompts/worker-handoff.md"
+                                        ],
+                      "skills":  [
+                                     "implementation"
+                                 ],
+                      "acceptance_criteria":  [
+                                                  "ac.scope_only: changed files stay under docs/ or README.md",
+                                                  "ac.docs_match: docs evidence reflects implemented behavior",
+                                                  "ac.validation: include doc review result in evidence"
+                                              ],
+                      "retries":  0,
+                      "max_retries":  3,
+                      "failure_reason":  "",
+                      "evidence":  [
+
+                                   ],
+                      "updated_at":  ""
+                  },
+                  {
+                      "id":  "task_004",
+                      "request_id":  "req_001",
+                      "priority":  "P2",
+                      "title":  "Tester Validation",
+                      "description":  "Tester AGENT validates request req_001 and returns findings to the main AGENT.",
+                      "phase":  "testing",
+                      "owner_role":  "tester_agent",
+                      "agent_profile":  "tester_agent",
+                      "parent_task_id":  "task_002",
+                      "preemptible":  false,
+                      "allow_scope_overlap":  false,
+                      "status":  "todo",
+                      "dependencies":  [
+                                           "task_003"
+                                       ],
+                      "scope":  [
+                                    "logs/",
+                                    "reports/",
+                                    "tasks.json"
+                                ],
+                      "context_files":  [
+                                            "AGENTS.md",
+                                            "tasks.json",
+                                            "prompts/tester-handoff.md"
+                                        ],
+                      "skills":  [
+                                     "testing",
+                                     "verification"
+                                 ],
+                      "acceptance_criteria":  [
+                                                  "ac.quality_checks: build/typecheck/lint/test results are recorded",
+                                                  "ac.report_format: tester output includes pass_or_fail, checks, findings, and evidence",
+                                                  "ac.evidence_schema: evidence lines follow cmd|result|log format"
+                                              ],
+                      "retries":  0,
+                      "max_retries":  3,
+                      "failure_reason":  "",
+                      "evidence":  [
+
+                                   ],
+                      "updated_at":  ""
+                  },
+                  {
+                      "id":  "task_005",
+                      "request_id":  "req_001",
+                      "priority":  "P2",
+                      "title":  "Main Acceptance Decision",
+                      "description":  "Main AGENT accepts or retries request req_001 after tester feedback.",
+                      "phase":  "acceptance",
+                      "owner_role":  "main_agent",
+                      "agent_profile":  "main_agent",
+                      "parent_task_id":  "task_002",
+                      "preemptible":  false,
+                      "allow_scope_overlap":  false,
+                      "status":  "todo",
+                      "dependencies":  [
+                                           "task_004"
+                                       ],
+                      "scope":  [
+                                    "logs/",
+                                    "reports/",
+                                    "tasks.json"
+                                ],
+                      "context_files":  [
+                                            "AGENTS.md",
+                                            "tasks.json",
+                                            "prompts/tester-handoff.md"
+                                        ],
+                      "skills":  [
+                                     "review",
+                                     "acceptance"
+                                 ],
+                      "acceptance_criteria":  [
+                                                  "ac.decision_made: decision is one of accept, retry, or block",
+                                                  "ac.retry_route: retry decision points to optimization tasks",
+                                                  "ac.reason_present: retry or block includes a concrete reason"
+                                              ],
+                      "retries":  0,
+                      "max_retries":  3,
+                      "failure_reason":  "",
+                      "evidence":  [
+
+                                   ],
+                      "updated_at":  ""
+                  },
+                  {
+                      "id":  "task_006",
+                      "request_id":  "req_001",
+                      "priority":  "P2",
+                      "title":  "Summarize Delivery",
+                      "description":  "Main AGENT summarizes only accepted work for request req_001.",
+                      "phase":  "summary",
+                      "owner_role":  "main_agent",
+                      "agent_profile":  "main_agent",
+                      "parent_task_id":  "task_002",
+                      "preemptible":  false,
+                      "allow_scope_overlap":  false,
+                      "status":  "todo",
+                      "dependencies":  [
+                                           "task_005"
+                                       ],
+                      "scope":  [
+                                    "reports/",
+                                    "docs/",
+                                    "tasks.json"
+                                ],
+                      "context_files":  [
+                                            "tasks.json",
+                                            "reports/"
+                                        ],
+                      "skills":  [
+                                     "docs"
+                                 ],
+                      "acceptance_criteria":  [
+                                                  "ac.status_consistent: request status and task states are internally consistent",
+                                                  "ac.accepted_only: summary includes only accepted work",
+                                                  "ac.evidence_linked: summary references decision evidence paths"
+                                              ],
+                      "retries":  0,
+                      "max_retries":  3,
+                      "failure_reason":  "",
+                      "evidence":  [
+
+                                   ],
+                      "updated_at":  ""
+                  },
+                  {
+                      "id":  "task_007",
+                      "request_id":  "req_002",
+                      "priority":  "P2",
+                      "title":  "Plan Request req_002",
+                      "description":  "Main AGENT plans and dispatches request req_002: 把这个工作流部署到桌面的移动端文件夹中",
+                      "phase":  "planning",
+                      "owner_role":  "main_agent",
+                      "agent_profile":  "main_agent",
+                      "parent_task_id":  "",
+                      "preemptible":  false,
+                      "allow_scope_overlap":  false,
+                      "status":  "todo",
+                      "dependencies":  [
+                                           "task_001"
+                                       ],
+                      "scope":  [
+                                    "tasks.json",
+                                    "docs/",
+                                    "reports/"
+                                ],
+                      "context_files":  [
+                                            "AGENTS.md",
+                                            "tasks.json",
+                                            "docs/09-缁熶竴浠诲姟鎷嗚В鏂规.md"
+                                        ],
+                      "skills":  [
+                                     "planning"
+                                 ],
+                      "acceptance_criteria":  [
+                                                  "ac.split_order: tasks are split by deliverable then code boundary then acceptance method",
+                                                  "ac.parallel_safety: parallel tasks do not overlap in unsafe scope",
+                                                  "ac.dispatch_ready: each child task has scope, context_files, and acceptance_criteria"
+                                              ],
+                      "retries":  0,
+                      "max_retries":  3,
+                      "failure_reason":  "",
+                      "evidence":  [
+                                       "cmd=auto_plan|result=pass|log=logs/workflow-20260414.log|artifact=C:\\Users\\admin\\Desktop\\自动化工作流\\reports\\plan-req_002-20260414-141748.md"
+                                   ],
+                      "updated_at":  "2026-04-14T14:17:48.1009887+08:00"
+                  },
+                  {
+                      "id":  "task_008",
+                      "request_id":  "req_002",
+                      "priority":  "P2",
+                      "title":  "Implement Core Changes",
+                      "description":  "Implement request req_002 for area \u0027core\u0027: 把这个工作流部署到桌面的移动端文件夹中",
+                      "phase":  "implementation",
+                      "owner_role":  "child_agent",
+                      "agent_profile":  "child_agent",
+                      "parent_task_id":  "task_007",
+                      "preemptible":  true,
+                      "allow_scope_overlap":  false,
+                      "status":  "todo",
+                      "dependencies":  [
+                                           "task_007"
+                                       ],
+                      "scope":  [
+                                    "src/",
+                                    "scripts/",
+                                    "docs/"
+                                ],
+                      "context_files":  [
+                                            "AGENTS.md",
+                                            "tasks.json",
+                                            "prompts/worker-handoff.md"
+                                        ],
+                      "skills":  [
+                                     "implementation"
+                                 ],
+                      "acceptance_criteria":  [
+                                                  "ac.scope_only: changed files stay in declared scope",
+                                                  "ac.behavior_match: implementation evidence matches request",
+                                                  "ac.validation: include at least one relevant check result",
+                                                  "ac.worker_md_report: worker returns a markdown report path under reports/results/"
+                                              ],
+                      "retries":  0,
+                      "max_retries":  3,
+                      "failure_reason":  "",
+                      "evidence":  [
+
+                                   ],
+                      "updated_at":  ""
+                  },
+                  {
+                      "id":  "task_009",
+                      "request_id":  "req_002",
+                      "priority":  "P2",
+                      "title":  "Tester Validation",
+                      "description":  "Tester AGENT validates request req_002 and returns findings to the main AGENT.",
+                      "phase":  "testing",
+                      "owner_role":  "tester_agent",
+                      "agent_profile":  "tester_agent",
+                      "parent_task_id":  "task_007",
+                      "preemptible":  false,
+                      "allow_scope_overlap":  false,
+                      "status":  "todo",
+                      "dependencies":  [
+                                           "task_008"
+                                       ],
+                      "scope":  [
+                                    "logs/",
+                                    "reports/",
+                                    "tasks.json"
+                                ],
+                      "context_files":  [
+                                            "AGENTS.md",
+                                            "tasks.json",
+                                            "prompts/tester-handoff.md"
+                                        ],
+                      "skills":  [
+                                     "testing",
+                                     "verification"
+                                 ],
+                      "acceptance_criteria":  [
+                                                  "ac.quality_checks: build/typecheck/lint/test results are recorded",
+                                                  "ac.report_format: tester output includes pass_or_fail, checks, findings, and evidence",
+                                                  "ac.evidence_schema: evidence lines follow cmd|result|log format",
+                                                  "ac.tester_md_report: tester returns a markdown report path under reports/results/"
+                                              ],
+                      "retries":  0,
+                      "max_retries":  3,
+                      "failure_reason":  "",
+                      "evidence":  [
+
+                                   ],
+                      "updated_at":  ""
+                  },
+                  {
+                      "id":  "task_010",
+                      "request_id":  "req_002",
+                      "priority":  "P2",
+                      "title":  "Main Acceptance Decision",
+                      "description":  "Main AGENT accepts or retries request req_002 after tester feedback.",
+                      "phase":  "acceptance",
+                      "owner_role":  "main_agent",
+                      "agent_profile":  "main_agent",
+                      "parent_task_id":  "task_007",
+                      "preemptible":  false,
+                      "allow_scope_overlap":  false,
+                      "status":  "todo",
+                      "dependencies":  [
+                                           "task_009"
+                                       ],
+                      "scope":  [
+                                    "logs/",
+                                    "reports/",
+                                    "tasks.json"
+                                ],
+                      "context_files":  [
+                                            "AGENTS.md",
+                                            "tasks.json",
+                                            "prompts/tester-handoff.md"
+                                        ],
+                      "skills":  [
+                                     "review",
+                                     "acceptance"
+                                 ],
+                      "acceptance_criteria":  [
+                                                  "ac.decision_made: decision is one of accept, retry, or block",
+                                                  "ac.retry_route: retry decision points to optimization tasks",
+                                                  "ac.reason_present: retry or block includes a concrete reason"
+                                              ],
+                      "retries":  0,
+                      "max_retries":  3,
+                      "failure_reason":  "",
+                      "evidence":  [
+
+                                   ],
+                      "updated_at":  ""
+                  },
+                  {
+                      "id":  "task_011",
+                      "request_id":  "req_002",
+                      "priority":  "P2",
+                      "title":  "Summarize Delivery",
+                      "description":  "Main AGENT summarizes only accepted work for request req_002.",
+                      "phase":  "summary",
+                      "owner_role":  "main_agent",
+                      "agent_profile":  "main_agent",
+                      "parent_task_id":  "task_007",
+                      "preemptible":  false,
+                      "allow_scope_overlap":  false,
+                      "status":  "todo",
+                      "dependencies":  [
+                                           "task_010"
+                                       ],
+                      "scope":  [
+                                    "reports/",
+                                    "docs/",
+                                    "tasks.json"
+                                ],
+                      "context_files":  [
+                                            "tasks.json",
+                                            "reports/"
+                                        ],
+                      "skills":  [
+                                     "docs"
+                                 ],
+                      "acceptance_criteria":  [
+                                                  "ac.status_consistent: request status and task states are internally consistent",
+                                                  "ac.accepted_only: summary includes only accepted work",
+                                                  "ac.evidence_linked: summary references decision evidence paths"
+                                              ],
+                      "retries":  0,
+                      "max_retries":  3,
+                      "failure_reason":  "",
+                      "evidence":  [
+
+                                   ],
+                      "updated_at":  ""
+                  }
+              ]
 }

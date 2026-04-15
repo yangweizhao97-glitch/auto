@@ -110,49 +110,56 @@ function Get-AreaCriteria {
             return @(
                 "ac.scope_only: changed files stay under src/, app/, pages/, components/, or web/",
                 "ac.ui_behavior: tester evidence confirms requested UI behavior",
-                "ac.validation: include at least one pass result from build/typecheck/lint/test"
+                "ac.validation: include at least one pass result from build/typecheck/lint/test",
+                "ac.worker_md_report: worker returns a markdown report path under reports/results/"
             )
         }
         "backend" {
             return @(
                 "ac.scope_only: changed files stay under src/, server/, api/, or backend/",
                 "ac.api_behavior: tester evidence confirms expected API or service behavior",
-                "ac.validation: include at least one pass result from build/typecheck/lint/test"
+                "ac.validation: include at least one pass result from build/typecheck/lint/test",
+                "ac.worker_md_report: worker returns a markdown report path under reports/results/"
             )
         }
         "data" {
             return @(
                 "ac.scope_only: changed files stay under db/, prisma/, migrations/, sql/, or src/",
                 "ac.data_consistency: evidence documents schema or migration impact",
-                "ac.validation: include at least one pass result from build/typecheck/lint/test"
+                "ac.validation: include at least one pass result from build/typecheck/lint/test",
+                "ac.worker_md_report: worker returns a markdown report path under reports/results/"
             )
         }
         "tests" {
             return @(
                 "ac.scope_only: changed files stay under tests/, __tests__/, or src/",
                 "ac.test_delta: evidence lists updated or added test files",
-                "ac.validation: include test command result with log path"
+                "ac.validation: include test command result with log path",
+                "ac.worker_md_report: worker returns a markdown report path under reports/results/"
             )
         }
         "docs" {
             return @(
                 "ac.scope_only: changed files stay under docs/ or README.md",
                 "ac.docs_match: docs evidence reflects implemented behavior",
-                "ac.validation: include doc review result in evidence"
+                "ac.validation: include doc review result in evidence",
+                "ac.worker_md_report: worker returns a markdown report path under reports/results/"
             )
         }
         "ci" {
             return @(
                 "ac.scope_only: changed files stay under .github/, scripts/, or ci/",
                 "ac.pipeline_behavior: evidence describes workflow impact",
-                "ac.validation: include pipeline-related command result in evidence"
+                "ac.validation: include pipeline-related command result in evidence",
+                "ac.worker_md_report: worker returns a markdown report path under reports/results/"
             )
         }
         default {
             return @(
                 "ac.scope_only: changed files stay in declared scope",
                 "ac.behavior_match: implementation evidence matches request",
-                "ac.validation: include at least one relevant check result"
+                "ac.validation: include at least one relevant check result",
+                "ac.worker_md_report: worker returns a markdown report path under reports/results/"
             )
         }
     }
@@ -424,7 +431,8 @@ $plannedTasks.Add((New-TaskObject `
     -AcceptanceCriteria @(
         "ac.quality_checks: build/typecheck/lint/test results are recorded",
         "ac.report_format: tester output includes pass_or_fail, checks, findings, and evidence",
-        "ac.evidence_schema: evidence lines follow cmd|result|log format"
+        "ac.evidence_schema: evidence lines follow cmd|result|log format",
+        "ac.tester_md_report: tester returns a markdown report path under reports/results/"
     ) `
     -MaxRetries $defaultRetries)) | Out-Null
 
