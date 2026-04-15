@@ -23,6 +23,7 @@ Validate the integrated implementation and report back to the main AGENT.
 5. report failures clearly and suggest optimization targets
 6. do not silently change code unless explicitly asked
 7. write tester markdown report to `writeback_report`, then return that file path
+8. do not submit final validation through chat context; markdown report file is the only delivery channel
 
 ## Output Format
 

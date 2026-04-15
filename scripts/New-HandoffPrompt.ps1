@@ -1,6 +1,6 @@
 param(
     [Parameter(Mandatory = $true)][string]$TaskId,
-    [Parameter(Mandatory = $true)][ValidateSet("planner", "worker", "reviewer", "main_agent", "child_agent", "tester_agent")][string]$Role
+    [Parameter(Mandatory = $true)][ValidateSet("planner", "worker", "reviewer", "main_agent", "child_agent", "tester_agent", "design_child")][string]$Role
 )
 
 . (Join-Path $PSScriptRoot "Shared.ps1")
@@ -36,6 +36,28 @@ function Resolve-ArtifactPath {
     }
 
     return (Join-Path $RepoRoot $PathValue)
+}
+
+function Test-IsUiTask {
+    param(
+        [Parameter(Mandatory = $true)]$Task
+    )
+
+    foreach ($item in @($Task.scope)) {
+        $normalized = $item.ToLowerInvariant()
+        if (
+            $normalized.Contains("design") -or
+            $normalized.Contains("frontend") -or
+            $normalized.Contains("app/") -or
+            $normalized.Contains("pages/") -or
+            $normalized.Contains("components/") -or
+            $normalized.Contains("web/")
+        ) {
+            return $true
+        }
+    }
+
+    return $false
 }
 
 function New-ResultTemplate {
@@ -131,6 +153,7 @@ $templateFile = switch ($profile) {
     "frontend_child" { "frontend-child.md" }
     "backend_child" { "backend-child.md" }
     "test_child" { "test-child.md" }
+    "design_child" { "design-child.md" }
     "optimization_child" { "optimization-handoff.md" }
     default { "worker-handoff.md" }
 }
@@ -140,7 +163,13 @@ Ensure-Directory -Path $reportDir
 
 $template = Get-Content -Raw -LiteralPath $templatePath
 $scopeText = if ($task.scope.Count -gt 0) { $task.scope -join ", " } else { "<none>" }
-$contextText = if ($task.context_files.Count -gt 0) { $task.context_files -join ", " } else { "<none>" }
+$contextFiles = @($task.context_files)
+$projectDesignPath = Join-Path $root "DESIGN.md"
+$hasProjectDesign = Test-Path -LiteralPath $projectDesignPath
+if ($hasProjectDesign -and (Test-IsUiTask -Task $task) -and -not ($contextFiles -contains "DESIGN.md")) {
+    $contextFiles += "DESIGN.md"
+}
+$contextText = if ($contextFiles.Count -gt 0) { $contextFiles -join ", " } else { "<none>" }
 $criteriaText = if ($task.acceptance_criteria.Count -gt 0) { $task.acceptance_criteria -join "; " } else { "<none>" }
 $goal = $task.description
 $failureText = "<none>"
@@ -189,12 +218,21 @@ $packetLines += ("- context_files: {0}" -f $contextText)
 $packetLines += ("- acceptance_criteria: {0}" -f $criteriaText)
 $packetLines += ""
 $packetLines += "## Context Files"
-if ($task.context_files.Count -gt 0) {
-    foreach ($contextFile in $task.context_files) {
+if ($contextFiles.Count -gt 0) {
+    foreach ($contextFile in $contextFiles) {
         $packetLines += ("- {0}" -f $contextFile)
     }
 } else {
     $packetLines += "- <none>"
+}
+$packetLines += ""
+$packetLines += "## Design System"
+if ($hasProjectDesign) {
+    $packetLines += ("- project_design_md: {0}" -f $projectDesignPath)
+    $packetLines += "- ui_rule: if this task touches UI or components, follow DESIGN.md tokens and interaction rules."
+} else {
+    $packetLines += "- project_design_md: <none>"
+    $packetLines += "- ui_rule: no DESIGN.md found; use existing project styles and record missing design guidance in result markdown."
 }
 $packetLines += ""
 $packetLines += "## Dependency Snapshot"

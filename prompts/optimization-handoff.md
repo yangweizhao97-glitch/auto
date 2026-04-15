@@ -24,6 +24,7 @@ Rework a previously attempted child task based on tester feedback.
 4. preserve good existing work when possible
 5. explain exactly what changed to address the failure
 6. write optimization markdown report to `writeback_report`, then return that file path
+7. do not submit optimization completion through chat context; markdown report file is the only delivery channel
 
 ## Output Format
 

@@ -32,6 +32,22 @@ Policy:
 2. assume workflow mode is always on in this repository
 3. keep `tasks.json` writes serialized by the main AGENT
 
+## Pre-Execution Change Notice
+
+Before any task execution that can change files, state, or workflow status, the AGENT must notify the user first.
+
+Required notice content:
+
+1. which files or directories will be modified
+2. which scripts or commands will be executed
+3. what the expected result of the change is
+
+Rules:
+
+1. do not edit files before this notice is sent to the user
+2. if planned scope changes during execution, send an updated notice before continuing edits
+3. emergency exceptions are not allowed unless the user explicitly waives this rule in the current request
+
 ## Priority And Preemption
 
 Priority levels:
@@ -121,6 +137,7 @@ This means:
 3. child and tester AGENTs must not rely on prior chat context as task source.
 4. each completed task must write a markdown result report and return its file path to main AGENT.
 5. main AGENT should process downstream decisions based on markdown report artifacts.
+6. main AGENT must reject context-only completion messages when no markdown report path is provided.
 
 ## Conflict Resolution
 

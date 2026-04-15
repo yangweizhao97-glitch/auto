@@ -44,6 +44,34 @@ powershell -ExecutionPolicy Bypass -File .\scripts\Auto-PlanTasks.ps1 -Request "
 powershell -ExecutionPolicy Bypass -File .\scripts\Invoke-Workflow.ps1 -Action Next
 ```
 
+### 3) 设计系统能力（已合并 awesome-design-md）
+
+```powershell
+# 查看可用 DESIGN profile（从 awesome-design-md 清单解析）
+powershell -ExecutionPolicy Bypass -File .\scripts\Get-DesignCatalog.ps1
+
+# 导入某个 profile 的 DESIGN.md / preview 文件
+powershell -ExecutionPolicy Bypass -File .\scripts\Import-DesignProfile.ps1 -Profile vercel -SetProjectDesign
+```
+
+说明：
+
+1. `Import-DesignProfile` 会把设计资料下载到 `design/awesome-design-md/<profile>/`。
+2. 使用 `-SetProjectDesign` 会同步覆盖项目根 `DESIGN.md`（可配 `-Force` 强制覆盖）。
+3. 当请求涉及前端/UI 时，工作流会自动把 `DESIGN.md` 纳入子任务上下文。
+
+### 4) DESIGN 使用策略（推荐）
+
+1. 默认使用第一批常用风格（当前项目根 `DESIGN.md`）。
+2. 仅在 UI 方向不满意且需要大幅改版时，切换到第二批 profile。
+3. 切换时只替换项目根 `DESIGN.md`，其余设计库保留作为候选。
+
+切换命令：
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\Import-DesignProfile.ps1 -Profile <profile> -SetProjectDesign -Force
+```
+
 ## 文档阅读顺序
 
 建议先读这 3 篇：
@@ -59,3 +87,4 @@ powershell -ExecutionPolicy Bypass -File .\scripts\Invoke-Workflow.ps1 -Action N
 1. `tasks.json` 的状态回写必须串行执行，避免并发覆盖。
 2. 默认不允许 `in_progress` 任务出现 scope 冲突。
 3. 只对已验收通过的结果做最终交付总结。
+4. 编程开发优先：代码类请求会自动补齐测试任务，形成 implementation -> testing -> acceptance 闭环。

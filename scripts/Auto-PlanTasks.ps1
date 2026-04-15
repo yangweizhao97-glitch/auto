@@ -56,8 +56,16 @@ function Get-InferredAreas {
         (New-Keyword -CodePoints @(0x6D41, 0x6C34, 0x7EBF)),
         (New-Keyword -CodePoints @(0x6784, 0x5EFA, 0x811A, 0x672C))
     )
+    $zhDesign = @(
+        (New-Keyword -CodePoints @(0x8BBE, 0x8BA1)),
+        (New-Keyword -CodePoints @(0x754C, 0x9762)),
+        (New-Keyword -CodePoints @(0x98CE, 0x683C)),
+        (New-Keyword -CodePoints @(0x4E3B, 0x9898)),
+        (New-Keyword -CodePoints @(0x89C6, 0x89C9))
+    )
 
     $rules = @(
+        @{ Name = "design"; Patterns = @("design.md", "design system", "ui style", "visual style", "theme", "token") + $zhDesign },
         @{ Name = "frontend"; Patterns = @("frontend", "ui", "page", "component", "view", "button", "screen") + $zhFrontend },
         @{ Name = "backend"; Patterns = @("backend", "server", "api", "endpoint", "service", "controller") + $zhBackend },
         @{ Name = "data"; Patterns = @("database", "db", "schema", "migration", "sql", "prisma", "model") + $zhData },
@@ -90,13 +98,14 @@ function Get-AreaScope {
     )
 
     switch ($Area) {
+        "design" { return @("DESIGN.md", "design/", "src/", "app/", "pages/", "components/", "web/") }
         "frontend" { return @("src/", "app/", "pages/", "components/", "web/") }
         "backend" { return @("src/", "server/", "api/", "backend/") }
         "data" { return @("db/", "prisma/", "migrations/", "sql/", "src/") }
         "tests" { return @("tests/", "__tests__/", "src/") }
         "docs" { return @("docs/", "README.md") }
         "ci" { return @(".github/", "scripts/", "ci/") }
-        default { return @("src/", "scripts/", "docs/") }
+        default { return @("src/", "app/", "server/", "api/", "tests/") }
     }
 }
 
@@ -106,6 +115,14 @@ function Get-AreaCriteria {
     )
 
     switch ($Area) {
+        "design" {
+            return @(
+                "ac.scope_only: changed files stay under DESIGN.md, design/, src/, app/, pages/, components/, or web/",
+                "ac.design_md_applied: implementation references and applies tokens or rules from DESIGN.md",
+                "ac.ui_behavior: tester evidence confirms requested UI behavior and visual consistency",
+                "ac.worker_md_report: worker returns a markdown report path under reports/results/"
+            )
+        }
         "frontend" {
             return @(
                 "ac.scope_only: changed files stay under src/, app/, pages/, components/, or web/",
@@ -158,7 +175,7 @@ function Get-AreaCriteria {
             return @(
                 "ac.scope_only: changed files stay in declared scope",
                 "ac.behavior_match: implementation evidence matches request",
-                "ac.validation: include at least one relevant check result",
+                "ac.validation: include at least one pass result from build/typecheck/lint/test",
                 "ac.worker_md_report: worker returns a markdown report path under reports/results/"
             )
         }
@@ -171,6 +188,7 @@ function Get-AreaTitle {
     )
 
     switch ($Area) {
+        "design" { return "Implement Design-System UI Changes" }
         "frontend" { return "Implement Frontend Changes" }
         "backend" { return "Implement Backend Changes" }
         "data" { return "Implement Data Changes" }
@@ -187,10 +205,49 @@ function Get-AreaAgentProfile {
     )
 
     switch ($Area) {
+        "design" { return "design_child" }
         "frontend" { return "frontend_child" }
         "backend" { return "backend_child" }
         "tests" { return "test_child" }
         default { return "child_agent" }
+    }
+}
+
+function Get-AreaContextFiles {
+    param(
+        [Parameter(Mandatory = $true)][string]$Area
+    )
+
+    $files = @("AGENTS.md", "tasks.json")
+    switch ($Area) {
+        "design" { $files += "prompts/design-child.md" }
+        "frontend" { $files += "prompts/frontend-child.md" }
+        "backend" { $files += "prompts/backend-child.md" }
+        "tests" { $files += "prompts/test-child.md" }
+        default { $files += "prompts/worker-handoff.md" }
+    }
+
+    $designPath = Join-Path (Get-RepoRoot) "DESIGN.md"
+    if (Test-Path -LiteralPath $designPath) {
+        $files += "DESIGN.md"
+    }
+
+    return @($files | Select-Object -Unique)
+}
+
+function Test-IsCodingArea {
+    param(
+        [Parameter(Mandatory = $true)][string]$Area
+    )
+
+    switch ($Area) {
+        "design" { return $true }
+        "frontend" { return $true }
+        "backend" { return $true }
+        "data" { return $true }
+        "tests" { return $true }
+        "core" { return $true }
+        default { return $false }
     }
 }
 
@@ -308,6 +365,18 @@ if ($Areas.Count -gt 0) {
 }
 $resolvedAreas = @($resolvedAreas | Select-Object -Unique)
 
+# Coding-first default: any coding request should include automated verification.
+$hasCodingArea = $false
+foreach ($area in $resolvedAreas) {
+    if (Test-IsCodingArea -Area $area) {
+        $hasCodingArea = $true
+        break
+    }
+}
+if ($hasCodingArea -and -not ($resolvedAreas -contains "tests")) {
+    $resolvedAreas += "tests"
+}
+
 $requestId = Get-NextRequestId -Workflow $workflow
 $createdAt = (Get-Date).ToString("o")
 $requestRecord = [pscustomobject]@{
@@ -405,11 +474,18 @@ foreach ($area in $resolvedAreas) {
         -AllowScopeOverlap $false `
         -Dependencies @($planTaskId) `
         -Scope (Get-AreaScope -Area $area) `
-        -ContextFiles @("AGENTS.md", "tasks.json", "prompts/worker-handoff.md") `
+        -ContextFiles (Get-AreaContextFiles -Area $area) `
         -Skills @("implementation") `
         -AcceptanceCriteria (Get-AreaCriteria -Area $area) `
         -MaxRetries $defaultRetries)) | Out-Null
 }
+
+$testerContextFiles = @("AGENTS.md", "tasks.json", "prompts/tester-handoff.md")
+$designPath = Join-Path (Get-RepoRoot) "DESIGN.md"
+if (($resolvedAreas -contains "design" -or $resolvedAreas -contains "frontend") -and (Test-Path -LiteralPath $designPath)) {
+    $testerContextFiles += "DESIGN.md"
+}
+$testerContextFiles = @($testerContextFiles | Select-Object -Unique)
 
 $testTaskId = Get-NextTaskId -Workflow ([pscustomobject]@{ tasks = @($workflow.tasks) + @($plannedTasks.ToArray()) })
 $plannedTasks.Add((New-TaskObject `
@@ -426,7 +502,7 @@ $plannedTasks.Add((New-TaskObject `
     -AllowScopeOverlap $false `
     -Dependencies ($implementationIds.ToArray()) `
     -Scope @("logs/", "reports/", "tasks.json") `
-    -ContextFiles @("AGENTS.md", "tasks.json", "prompts/tester-handoff.md") `
+    -ContextFiles $testerContextFiles `
     -Skills @("testing", "verification") `
     -AcceptanceCriteria @(
         "ac.quality_checks: build/typecheck/lint/test results are recorded",

@@ -22,6 +22,7 @@ Implement a single testing task.
 4. keep test intent easy to understand from changed files
 5. report any missing hooks or seams that block testing
 6. write final markdown report to `writeback_report`, then return that file path
+7. do not submit task completion through chat context; markdown report file is the only delivery channel
 
 ## Output Format
 

@@ -16,6 +16,10 @@ strict_scope = true
 prompt = "prompts/frontend-child.md"
 strict_scope = true
 
+[profiles.design_child]
+prompt = "prompts/design-child.md"
+strict_scope = true
+
 [profiles.backend_child]
 prompt = "prompts/backend-child.md"
 strict_scope = true

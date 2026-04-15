@@ -44,11 +44,78 @@ function Test-EvidenceFormat {
     return ($Line -match "^cmd=.+\|result=(pass|fail|skipped)\|log=.+(\|artifact=.+)?$")
 }
 
+function Get-ArtifactPathFromEvidence {
+    param([string]$Line)
+
+    if ([string]::IsNullOrWhiteSpace($Line)) {
+        return ""
+    }
+
+    if ($Line -match "\|artifact=([^|]+)$") {
+        return $Matches[1].Trim()
+    }
+
+    if ($Line -notmatch "\|") {
+        return $Line.Trim()
+    }
+
+    return ""
+}
+
+function Resolve-ArtifactPath {
+    param(
+        [Parameter(Mandatory = $true)][string]$RepoRoot,
+        [Parameter(Mandatory = $true)][string]$PathValue
+    )
+
+    if ([System.IO.Path]::IsPathRooted($PathValue)) {
+        return $PathValue
+    }
+
+    return (Join-Path $RepoRoot $PathValue)
+}
+
+function Test-HasValidResultMarkdownEvidence {
+    param(
+        [Parameter(Mandatory = $true)][string[]]$EvidenceLines,
+        [Parameter(Mandatory = $true)][string]$RepoRoot
+    )
+
+    $resultsRoot = [System.IO.Path]::GetFullPath((Join-Path $RepoRoot "reports/results"))
+    $resultsRootNorm = $resultsRoot.ToLowerInvariant().Replace("/", "\")
+
+    foreach ($line in $EvidenceLines) {
+        $artifact = Get-ArtifactPathFromEvidence -Line $line
+        if ([string]::IsNullOrWhiteSpace($artifact)) {
+            continue
+        }
+
+        $resolved = Resolve-ArtifactPath -RepoRoot $RepoRoot -PathValue $artifact
+        $resolvedFull = [System.IO.Path]::GetFullPath($resolved)
+        $resolvedNorm = $resolvedFull.ToLowerInvariant().Replace("/", "\")
+
+        if (-not $resolvedNorm.EndsWith(".md")) {
+            continue
+        }
+
+        if (-not $resolvedNorm.StartsWith($resultsRootNorm + "\")) {
+            continue
+        }
+
+        if (Test-Path -LiteralPath $resolved) {
+            return $true
+        }
+    }
+
+    return $false
+}
+
 $workflow = Read-Workflow
 $errors = New-Object System.Collections.Generic.List[string]
 $warnings = New-Object System.Collections.Generic.List[string]
 $allowedPriorities = @("P0", "P1", "P2", "P3")
 $allowedStatuses = @("todo", "in_progress", "done", "blocked")
+$repoRoot = Get-RepoRoot
 
 if ([int]$workflow.workflow.default_max_retries -lt 1) {
     $errors.Add("workflow.default_max_retries must be >= 1") | Out-Null
@@ -117,6 +184,19 @@ foreach ($task in $workflow.tasks) {
         }
         if ($evidence -notmatch "\|") {
             $warnings.Add(("task {0} uses legacy evidence path format: {1}" -f $task.id, $evidence)) | Out-Null
+        }
+    }
+
+    if ($task.status -eq "done") {
+        $requiresMarkdownEvidence = $false
+        if ($task.owner_role -eq "child_agent" -or $task.owner_role -eq "tester_agent") {
+            $requiresMarkdownEvidence = $true
+        } elseif ($task.phase -eq "implementation" -or $task.phase -eq "testing") {
+            $requiresMarkdownEvidence = $true
+        }
+
+        if ($requiresMarkdownEvidence -and -not (Test-HasValidResultMarkdownEvidence -EvidenceLines @($task.evidence) -RepoRoot $repoRoot)) {
+            $errors.Add(("task {0} is done but missing existing markdown artifact evidence under reports/results/*.md" -f $task.id)) | Out-Null
         }
     }
 }

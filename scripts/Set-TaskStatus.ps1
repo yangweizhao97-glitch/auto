@@ -45,25 +45,81 @@ function Test-EvidenceFormat {
     return ($Line -match "^cmd=.+\|result=(pass|fail|skipped)\|log=.+(\|artifact=.+)?$")
 }
 
+function Get-ArtifactPathFromEvidence {
+    param(
+        [string]$Line
+    )
+
+    if ([string]::IsNullOrWhiteSpace($Line)) {
+        return ""
+    }
+
+    if ($Line -match "\|artifact=([^|]+)$") {
+        return $Matches[1].Trim()
+    }
+
+    if ($Line -notmatch "\|") {
+        return $Line.Trim()
+    }
+
+    return ""
+}
+
+function Resolve-ArtifactPath {
+    param(
+        [Parameter(Mandatory = $true)][string]$RepoRoot,
+        [Parameter(Mandatory = $true)][string]$PathValue
+    )
+
+    if ([System.IO.Path]::IsPathRooted($PathValue)) {
+        return $PathValue
+    }
+
+    return (Join-Path $RepoRoot $PathValue)
+}
+
+function Test-IsReportsResultMarkdown {
+    param(
+        [Parameter(Mandatory = $true)][string]$RepoRoot,
+        [Parameter(Mandatory = $true)][string]$ArtifactPath
+    )
+
+    if ([string]::IsNullOrWhiteSpace($ArtifactPath)) {
+        return $false
+    }
+
+    $resolved = Resolve-ArtifactPath -RepoRoot $RepoRoot -PathValue $ArtifactPath
+    $resolvedFull = [System.IO.Path]::GetFullPath($resolved)
+    $resultsRoot = [System.IO.Path]::GetFullPath((Join-Path $RepoRoot "reports/results"))
+
+    $resolvedNorm = $resolvedFull.ToLowerInvariant().Replace("/", "\")
+    $resultsNorm = $resultsRoot.ToLowerInvariant().Replace("/", "\")
+
+    if (-not $resolvedNorm.EndsWith(".md")) {
+        return $false
+    }
+
+    return ($resolvedNorm.StartsWith($resultsNorm + "\"))
+}
+
 function Test-HasMarkdownArtifactEvidence {
     param(
-        [string[]]$Lines
+        [string[]]$Lines,
+        [Parameter(Mandatory = $true)][string]$RepoRoot
     )
 
     foreach ($line in $Lines) {
-        if ([string]::IsNullOrWhiteSpace($line)) {
+        $artifact = Get-ArtifactPathFromEvidence -Line $line
+        if ([string]::IsNullOrWhiteSpace($artifact)) {
             continue
         }
 
-        if ($line -match "\|artifact=([^|]+)$") {
-            $artifact = $Matches[1].Trim()
-            if ($artifact.ToLowerInvariant().EndsWith(".md")) {
-                return $true
-            }
+        if (-not (Test-IsReportsResultMarkdown -RepoRoot $RepoRoot -ArtifactPath $artifact)) {
             continue
         }
 
-        if ($line -notmatch "\|" -and $line.Trim().ToLowerInvariant().EndsWith(".md")) {
+        $resolved = Resolve-ArtifactPath -RepoRoot $RepoRoot -PathValue $artifact
+        if (Test-Path -LiteralPath $resolved) {
             return $true
         }
     }
@@ -118,6 +174,7 @@ foreach ($entry in $Evidence) {
 }
 
 if ($Status -eq "done") {
+    $repoRoot = Get-RepoRoot
     $requiresMarkdownEvidence = $false
     if ($task.owner_role -eq "child_agent" -or $task.owner_role -eq "tester_agent") {
         $requiresMarkdownEvidence = $true
@@ -127,8 +184,8 @@ if ($Status -eq "done") {
 
     if ($requiresMarkdownEvidence) {
         $combinedEvidence = @($task.evidence) + @($Evidence)
-        if (-not (Test-HasMarkdownArtifactEvidence -Lines $combinedEvidence)) {
-            throw ("Completing {0} requires markdown artifact evidence (reports/results/*.md)." -f $task.id)
+        if (-not (Test-HasMarkdownArtifactEvidence -Lines $combinedEvidence -RepoRoot $repoRoot)) {
+            throw ("Completing {0} requires an existing markdown artifact under reports/results/*.md via evidence artifact." -f $task.id)
         }
     }
 }

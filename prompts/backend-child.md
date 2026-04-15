@@ -22,6 +22,7 @@ Implement a single backend task.
 4. keep contracts and side effects explicit
 5. call out schema, API, or service risks directly
 6. write final markdown report to `writeback_report`, then return that file path
+7. do not submit task completion through chat context; markdown report file is the only delivery channel
 
 ## Output Format
 
